@@ -179,10 +179,10 @@ resource "azurerm_windows_virtual_machine" "windows_vm" {
 
 resource "random_password" "password" {
   length      = 20
-  min_lower   = 12
+  min_lower   = 1
   min_upper   = 2
   min_numeric = 2
-  min_special = 2
+  min_special = 1
   special     = true
 }
 
