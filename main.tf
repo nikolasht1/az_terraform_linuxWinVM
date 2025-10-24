@@ -9,7 +9,7 @@ resource "azurerm_resource_group" "rg" {
 
 # Create virtual network
 resource "azurerm_virtual_network" "my_terraform_network" {
-  name                = "WindowsLinuxVnet"
+  name                = "LinuxVnet"
   address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
@@ -17,7 +17,7 @@ resource "azurerm_virtual_network" "my_terraform_network" {
 
 # Create subnet
 resource "azurerm_subnet" "my_terraform_subnet" {
-  name                 = "WindowsLinuxSubnet"
+  name                 = "LinuxSubnet"
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.my_terraform_network.name
   address_prefixes     = ["10.0.1.0/24"]
@@ -25,7 +25,7 @@ resource "azurerm_subnet" "my_terraform_subnet" {
 
 # Create Network Security Group and rule
 resource "azurerm_network_security_group" "my_terraform_nsg" {
-  name                = "WindowsLinuxNetworkSecurityGroup"
+  name                = "LinuxNetworkSecurityGroup"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 
@@ -40,31 +40,11 @@ resource "azurerm_network_security_group" "my_terraform_nsg" {
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
-  security_rule {
-    name                       = "RDP"
-    priority                   = 100
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "*"
-    source_port_range          = "*"
-    destination_port_range     = "3389"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
 }
 
 # Create public IPs
 resource "azurerm_public_ip" "ubuntu_ip" {
   name                = "ubuntuPublicIP"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  sku                 = "Standard"
-  allocation_method   = "Static"
-  ip_version          = "IPv4"
-}
-
-resource "azurerm_public_ip" "windows_ip" {
-  name                = "windowsPublicIp"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   sku                 = "Standard"
@@ -86,28 +66,9 @@ resource "azurerm_network_interface" "ubuntu_nic" {
   }
 }
 
-# Create network interface
-resource "azurerm_network_interface" "windows_nic" {
-  name                = "windowsNIC"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-
-  ip_configuration {
-    name                          = "windows_nic_internal"
-    subnet_id                     = azurerm_subnet.my_terraform_subnet.id
-    private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.windows_ip.id
-  }
-}
-
 # Connect the security group to the network interface
 resource "azurerm_network_interface_security_group_association" "ubuntu_nsg_assoc" {
   network_interface_id      = azurerm_network_interface.ubuntu_nic.id
-  network_security_group_id = azurerm_network_security_group.my_terraform_nsg.id
-}
-
-resource "azurerm_network_interface_security_group_association" "windows_nsg_assoc" {
-  network_interface_id      = azurerm_network_interface.windows_nic.id
   network_security_group_id = azurerm_network_security_group.my_terraform_nsg.id
 }
 
@@ -127,7 +88,7 @@ resource "azurerm_linux_virtual_machine" "ubuntu_vm" {
   location              = azurerm_resource_group.rg.location
   resource_group_name   = azurerm_resource_group.rg.name
   network_interface_ids = [azurerm_network_interface.ubuntu_nic.id]
-  size                  = "Standard_D2as_v6"
+  size                  = "Standard_D2als_v6"
 
   source_image_reference {
     publisher = "Canonical"
@@ -151,42 +112,4 @@ resource "azurerm_linux_virtual_machine" "ubuntu_vm" {
     username   = var.username
     public_key = file("~/.ssh/id_rsa.pub")
   }
-}
-
-# Create win virtual machine
-resource "azurerm_windows_virtual_machine" "windows_vm" {
-  name                  = "windowsVM"
-  admin_username        = var.username
-  admin_password        = random_password.password.result
-  location              = azurerm_resource_group.rg.location
-  resource_group_name   = azurerm_resource_group.rg.name
-  network_interface_ids = [azurerm_network_interface.windows_nic.id]
-  size                  = "Standard_D2als_v6"
-
-  os_disk {
-    name                 = "windowsOsDisk"
-    caching              = "ReadWrite"
-    storage_account_type = "Standard_LRS"
-  }
-
-  source_image_reference {
-    publisher = "MicrosoftWindowsServer"
-    offer     = "WindowsServer"
-    sku       = "2022-datacenter-azure-edition"
-    version   = "latest"
-  }
-}
-
-resource "random_password" "password" {
-  length      = 20
-  min_lower   = 1
-  min_upper   = 2
-  min_numeric = 2
-  min_special = 1
-  special     = true
-}
-
-resource "random_pet" "prefix" {
-  prefix = var.prefix
-  length = 1
 }

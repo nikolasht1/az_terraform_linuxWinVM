@@ -1,0 +1,72 @@
+
+
+terraform destroy -target=azurerm_linux_virtual_machine.ubuntu_vm
+
+
+terraform destroy -target=azurerm_linux_virtual_machine.ubuntu_vm["vm1"] \
+                   -target=azurerm_linux_virtual_machine.ubuntu_vm["vm2"] \
+                   -target=azurerm_linux_virtual_machine.ubuntu_vm["vm3"] \
+                   -target=azurerm_linux_virtual_machine.ubuntu_vm["vm4"]
+
+
+terraform destroy -target=azurerm_network_interface.ubuntu_nic["vm1"] \
+                   -target=azurerm_network_interface.ubuntu_nic["vm2"] \
+                   -target=azurerm_network_interface.ubuntu_nic["vm3"] \
+                   -target=azurerm_network_interface.ubuntu_nic["vm4"] \
+                   -target=azurerm_public_ip.ubuntu_ip["vm1"] \
+                   -target=azurerm_public_ip.ubuntu_ip["vm2"] \
+                   -target=azurerm_public_ip.ubuntu_ip["vm3"] \
+                   -target=azurerm_public_ip.ubuntu_ip["vm4"]
+
+
+terraform destroy -target=azurerm_network_interface.ubuntu_nic["vm1"] \
+                   -target=azurerm_network_interface.ubuntu_nic["vm2"] \
+                   -target=azurerm_network_interface.ubuntu_nic["vm3"] \
+                   -target=azurerm_network_interface.ubuntu_nic["vm4"] \
+                   -target=azurerm_public_ip.ubuntu_ip["vm1"] \
+                   -target=azurerm_public_ip.ubuntu_ip["vm2"] \
+                   -target=azurerm_public_ip.ubuntu_ip["vm3"] \
+                   -target=azurerm_public_ip.ubuntu_ip["vm4"]
+
+
+terraform destroy -target=azurerm_network_security_group.my_terraform_nsg \
+                   -target=azurerm_subnet.my_terraform_subnet \
+                   -target=azurerm_virtual_network.my_terraform_network
+
+
+terraform destroy -target=azurerm_resource_group.rg \
+                   -target=random_pet.rg_name \
+                   -target=random_id.random_id
+
+
+terraform destroy
+
+
+#### impoting infrastructure ####
+
+
+az resource list --resource-group <your-resource-group-name>
+
+
+terraform import azurerm_resource_group.rg /subscriptions/<sub-id>/resourceGroups/<rg-name>
+
+
+terraform import azurerm_virtual_network.my_terraform_network /subscriptions/<sub-id>/resourceGroups/<rg-name>/providers/Microsoft.Network/virtualNetworks/LinuxVnet
+
+
+terraform import azurerm_subnet.my_terraform_subnet /subscriptions/<sub-id>/resourceGroups/<rg-name>/providers/Microsoft.Network/virtualNetworks/LinuxVnet/subnets/LinuxSubnet
+
+
+terraform import azurerm_network_security_group.my_terraform_nsg /subscriptions/<sub-id>/resourceGroups/<rg-name>/providers/Microsoft.Network/networkSecurityGroups/LinuxNetworkSecurityGroup
+
+
+terraform import azurerm_public_ip.ubuntu_ip["vm1"] /subscriptions/<sub-id>/resourceGroups/<rg-name>/providers/Microsoft.Network/publicIPAddresses/ubuntuVM-1-public-ip
+
+
+terraform import azurerm_network_interface.ubuntu_nic["vm1"] /subscriptions/<sub-id>/resourceGroups/<rg-name>/providers/Microsoft.Network/networkInterfaces/ubuntuNIC-1
+
+
+terraform import azurerm_network_interface_security_group_association.ubuntu_nsg_assoc["vm1"] <nic-id>/networkSecurityGroup
+
+
+terraform import azurerm_linux_virtual_machine.ubuntu_vm["vm1"] /subscriptions/<sub-id>/resourceGroups/<rg-name>/providers/Microsoft.Compute/virtualMachines/ubuntuVM-1
